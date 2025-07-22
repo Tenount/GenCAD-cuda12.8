@@ -1,6 +1,6 @@
-FROM continuumio/miniconda3
+FROM ghcr.io/prefix-dev/pixi:noble-cuda-12.8.1
+# https://pixi.sh/dev/deployment/container/
 
-ENV CONDA_ENV_NAME=gencad_env
 WORKDIR /app
 
 # Install system dependencies (including xvfb and OpenGL libs)
@@ -15,12 +15,27 @@ RUN apt-get update && apt-get install -y \
     x11-utils \
     && rm -rf /var/lib/apt/lists/*
 
-COPY environment.yml .
-RUN conda env create -f environment.yml && \
-    conda clean -afy
+ENV PIXI_ENV=gpu
 
-SHELL ["conda", "run", "-n", "gencad_env", "/bin/bash", "-c"]
+COPY pixi.toml pixi.lock ./
 
-COPY . .
+# install dependencies to `/app/.pixi/envs/prod`
+# use `--locked` to ensure the lockfile is up to date with pixi.toml
+RUN pixi install --locked -e "$PIXI_ENV"
 
-CMD ["conda", "run", "-n", "gencad_env", "python", "demo.py"]
+# create the shell-hook bash script to activate the environment
+RUN <<EOT
+    pixi shell-hook -e "$PIXI_ENV" -s bash > /shell-hook
+    echo "#!/bin/bash" > /app/entrypoint.sh
+    cat /shell-hook >> /app/entrypoint.sh
+
+    # extend the shell-hook script to run the command passed to the container
+    echo 'exec "$@"' >> /app/entrypoint.sh
+    chmod +x /app/entrypoint.sh
+EOT
+
+COPY <<EOF /entrypoint.sh
+
+EOF
+
+ENTRYPOINT ["/app/entrypoint.sh"]

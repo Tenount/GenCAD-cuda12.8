@@ -1,0 +1,30 @@
+services:
+    gencad:
+      build:
+        dockerfile: Dockerfile
+        context: .
+      # command: xvfb-run --server-args="-screen 0 2048x2048x24" python inference_gencad.py -image_path data/images -export_img
+      command: "tail -f /dev/null"
+      volumes:
+        - ./cadlib:/app/cadlib:ro
+        - ./config:/app/config:ro
+        - ./model:/app/model:ro
+        - ./trainer:/app/trainer:ro
+        - ./utils:/app/utils:ro
+        - ./inference_gencad.py:/app/inference_gencad.py:ro
+        - ./inference_gencad.py:/app/inference_gencad.py:ro
+        - ./stl2img.py:/app/stl2img.py:ro
+        - ./train_gencad.py:/app/train_gencad.py:ro
+
+        - ./assets:/app/assets
+        - ./data:/app/data
+        - ./results:/app/results
+
+        - ./test.sh:/app/test.sh
+      deploy:
+        resources:
+          reservations:
+            devices:
+              - driver: nvidia
+                count: all
+                capabilities: [gpu]
