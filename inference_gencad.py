@@ -126,6 +126,7 @@ def vec_to_CAD(cad_vec):
     
     except Exception as e:
         print('cannot create CAD')
+        print(e)
 
 
 def main(img_dir, export_stl=False, export_img=False):
@@ -264,8 +265,9 @@ def main(img_dir, export_stl=False, export_img=False):
                 os.makedirs(os.path.join(img_dir, "stls"), exist_ok=True) 
                 export_path = img_dir + "/stls/" + f"{img_name}.stl"
                 write_stl_file(shape, export_path, mode="binary", linear_deflection=0.5, angular_deflection=0.3,)
-        except:
-            print("cannot find EOS") 
+        except Exception as e:
+            print("cannot find EOS")
+            print(e)
 
 
 if __name__ == "__main__":
